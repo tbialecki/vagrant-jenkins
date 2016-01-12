@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+JENKINS_PLUGINS='htmlpublisher git'
+
 #############################################################
 # Install Java8
 #############################################################
@@ -23,6 +25,7 @@ wget -q -O - https://jenkins-ci.org/debian/jenkins-ci.org.key | apt-key add -
 sh -c 'echo deb http://pkg.jenkins-ci.org/debian binary/ > /etc/apt/sources.list.d/jenkins.list'
 apt-get update
 apt-get -y install jenkins
+service jenkins restart
 
 #############################################################
 # Install nginx
@@ -43,9 +46,20 @@ service nginx restart
 #############################################################
 # Install Jenkins plugins
 #############################################################
-java -jar /vagrant/config/jenkins-cli.jar -s http://localhost:8080/ wait-node-online
-java -jar /vagrant/config/jenkins-cli.jar -s http://localhost:8080/ install-plugin htmlpublisher git
+while [ `curl -sw '%{http_code}' http://localhost:8080/cli -o /dev/null` -gt 500 ]
+do
+	sleep 1;
+ 	echo "waiting for jenkins to start";
+done
+wget -O /tmp/jenkins-cli.jar http://localhost:8080/jnlpJars/jenkins-cli.jar
+java -jar /tmp/jenkins-cli.jar -s http://localhost:8080/ wait-node-online ""
+java -jar /tmp/jenkins-cli.jar -s http://localhost:8080/ install-plugin $JENKINS_PLUGINS
 service jenkins restart
+
+#############################################################
+# Install git
+#############################################################
+apt-get -y install git
 
 #############################################################
 # Install Jenkins plugins

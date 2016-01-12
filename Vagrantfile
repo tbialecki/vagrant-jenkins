@@ -6,7 +6,18 @@
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
 Vagrant.configure(2) do |config|
-  config.vm.box = "ubuntu/trusty64"
-  config.vm.network :forwarded_port, guest: 80, host: 8082
-  config.vm.provision "shell", path: "provision.sh"
+	config.vm.define 'jenkins' do |jenkins|
+  		jenkins.vm.box = "ubuntu/trusty64"
+  		jenkins.vm.hostname = 'jenkins'
+  		jenkins.vm.provider :virtualbox do |vb|
+      		vb.customize [
+                       'modifyvm', :id,
+                       '--name', 'jenkins',
+                       '--memory', 2048,
+                       '--ioapic', 'on'
+                   ]
+    		end
+  		jenkins.vm.network :forwarded_port, guest: 80, host: 8082
+  		jenkins.vm.provision "shell", path: "provision.sh"
+  	end
 end
